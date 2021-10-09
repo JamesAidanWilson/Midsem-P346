@@ -182,7 +182,7 @@ def identity_matx(n):
 
 # GENERATING A MATRIX FROM THE LIST
 
-def make_matx(val,r,c): # val is for the values imported from the txt file
+def make_matx(val,r,c): # val is for the values imported from the list
     Nu = null_matx(r,c)
     for i in range(r):
         for j in range(c):                      # the string of numbers is marked as 0 1 2...
@@ -352,8 +352,8 @@ def transpose(L):
 def sub_FOW(L,v):
     r = len(L) # Using, Ux=y and Ly=v, for Mx=v system of equations
     X = null_matx(r,1) 
-    dum = 0
     for i in range(r): # iterating through rows
+        dum = 0
         for j in range(i): # iterating through columns
             dum += L[i][j]*X[j][0]  # dummy variable to use for the substitution step
         X[i][0] = (v[i][0]-dum)*(1/L[i][i])  # substitution
@@ -394,36 +394,38 @@ def Doolittle(M):
 def Doolittle_Sol(MX):
     r = len(MX)
     c = len(MX[0])
-
-    M = null_matx(r,r)
-    X = null_matx(r,1)
-
+    
+    # Separating A and b from the Augmented matrix
+    A = null_matx(r,r)
+    b = null_matx(r,1)
     for i in range(r):
-        X[i][0] = MX[i][-1]
+        b[i][0] = MX[i][-1]
         for j in range(c-1):
-            M[i][j] = MX[i][j]
-
-    P = Doolittle(M)
-
-    if P == None:
-        print("Unsuccessfull Operation.")
-    else:
+            A[i][j] = MX[i][j]   # A and b are now separated
+    
+    A2 = A          # Creating a duplicate of A
+    
+    A2 = Doolittle(A2)    # Performing LU decomposition on A using doolittle()
+    
+    # Separating L and U
+    if A2!=None:          # Decomposing A2 into L and U using Doolittle
         L = null_matx(r,r)
         U = null_matx(r,r)
         for i in range(r):
             for j in range(r):
                 if j<i:
-                    L[i][j] = P[i][j]
+                    L[i][j] = A2[i][j]
                 if j>=i:
-                    U[i][j] = P[i][j]
+                    U[i][j] = A2[i][j]    # Separating L and U from the L/U augmented form obtained from doolittle()
                     if j==i:
-                        L[i][i] = 1
-
-        p = sub_FOW(L,X)
-        q = sub_BACK(U,p)
+                        L[i][i] = 1       # Making diagonal elements of L to 1
         
-        M = round_matx(M,2)
+        p = sub_FOW(L,b)        # Solving Ly=b
+        q = sub_BACK(U,p)       # Finally solving Ux=y       # Using custom round function to round the matrix to 3 decimals
         return(q)
+        
+    else:
+        print("Unsuccessfull Operation.")
 
 # CROUT'S METHOD FOR SOLVING A SYSTEM OF LINEAR EQUATIONS
 
@@ -620,12 +622,15 @@ def Bisection(a,b,e,f):
 
     elif f(a)*f(b) == 0:
         if f(a) == 0:
+            c = a
             print(str(a)+" is the root.")
         elif f(b) == 0:
+            c = b
             print(str(b)+" is the root.")
 
     elif f(a)*f(b) > 0:
         print("Choose interval carefully.")
+    return float(c)
 
 # REGULA-FALSI METHOD
 
@@ -698,6 +703,7 @@ def NewtonRaphson(x_o,e,f):
             print(str(x_o) + " is the root.")
         i += 1
     print("The root is: " + str(x_o))
+    return x_o
 
 # LAGUERRE METHOD FOR POLYNOMIALS
 
